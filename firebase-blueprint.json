@@ -1,0 +1,135 @@
+{
+  "entities": {
+    "Member": {
+      "title": "Member",
+      "description": "Information about a member in the system.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the member." },
+        "memberType": { "type": "string", "enum": ["Life", "General", "Associate"], "description": "Type of membership." },
+        "name": { "type": "string", "description": "Full name of the member." },
+        "fathersName": { "type": "string", "description": "Father's name." },
+        "mothersName": { "type": "string", "description": "Mother's name." },
+        "mobileNo": { "type": "string", "description": "Mobile number." },
+        "emailAddress": { "type": "string", "format": "email", "description": "Email address." },
+        "bloodGroup": { "type": "string", "enum": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"], "description": "Blood group." },
+        "gender": { "type": "string", "enum": ["Male", "Female", "Other"], "description": "Gender." },
+        "designation": { "type": "string", "description": "Job designation." },
+        "committee": { "type": "string", "description": "Committee name." },
+        "occupation": { "type": "string", "description": "Occupation." },
+        "installationDate": { "type": "string", "format": "date", "description": "Date of installation/joining." },
+        "isDeceased": { "type": "boolean", "description": "Whether the member is deceased." },
+        "deceasedDate": { "type": "string", "format": "date", "description": "Date of death if deceased." },
+        "presentAddress": { "type": "string", "description": "Current residential address." },
+        "permanentAddress": { "type": "string", "description": "Permanent home address." },
+        "businessAddress": { "type": "string", "description": "Work or business address." },
+        "photoUrl": { "type": "string", "description": "URL to the member's photo." },
+        "createdBy": { "type": "string", "description": "UID of the user who created this record." },
+        "createdDate": { "type": "string", "format": "date-time", "description": "Timestamp of creation." },
+        "updatedBy": { "type": "string", "description": "UID of the user who last updated this record." },
+        "updatedDate": { "type": "string", "format": "date-time", "description": "Timestamp of last update." }
+      },
+      "required": ["memberType", "name", "mobileNo", "emailAddress", "gender", "occupation", "installationDate", "isDeceased", "presentAddress", "permanentAddress", "businessAddress"]
+    },
+    "User": {
+      "title": "User",
+      "description": "System user profile.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "user"] }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Subscription": {
+      "title": "Subscription",
+      "description": "Monthly fee payment record.",
+      "type": "object",
+      "properties": {
+        "memberId": { "type": "string" },
+        "memberName": { "type": "string" },
+        "month": { "type": "number" },
+        "year": { "type": "number" },
+        "amount": { "type": "number" },
+        "paymentDate": { "type": "string", "format": "date" },
+        "status": { "type": "string", "enum": ["Paid", "Due"] },
+        "transactionId": { "type": "string" },
+        "recordedBy": { "type": "string" },
+        "recordedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["memberId", "month", "year", "amount", "status"]
+    },
+    "FinancialRecord": {
+      "title": "FinancialRecord",
+      "description": "Income or expense record.",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["Income", "Expense"] },
+        "category": { "type": "string" },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "format": "date" },
+        "description": { "type": "string" },
+        "referenceId": { "type": "string" },
+        "recordedBy": { "type": "string" },
+        "recordedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["type", "category", "amount", "date", "description"]
+    },
+    "Activity": {
+      "title": "Activity",
+      "description": "Social work or event activity.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "location": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "cost": { "type": "number" },
+        "status": { "type": "string", "enum": ["Planned", "Completed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "description", "date", "status"]
+    },
+    "AppSettings": {
+      "title": "Application Settings",
+      "description": "Global application settings like opening balance.",
+      "type": "object",
+      "properties": {
+        "openingBalance": { "type": "number", "description": "The initial opening balance for accounting." },
+        "updatedBy": { "type": "string", "description": "UID of the user who last updated the settings." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Timestamp of the last update." }
+      },
+      "required": ["openingBalance", "updatedBy", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/members/{memberId}": {
+      "schema": "Member",
+      "description": "Collection of members."
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Collection of system users."
+    },
+    "/settings/{settingId}": {
+      "schema": "AppSettings",
+      "description": "Stores global application settings. Document ID should be 'finance'."
+    },
+    "/subscriptions/{subId}": {
+      "schema": "Subscription",
+      "description": "Collection of fee payments."
+    },
+    "/finances/{finId}": {
+      "schema": "FinancialRecord",
+      "description": "Collection of income and expenses."
+    },
+    "/activities/{actId}": {
+      "schema": "Activity",
+      "description": "Collection of foundation activities."
+    }
+  }
+}

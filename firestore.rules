@@ -1,0 +1,160 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: userId (UID)
+    // Fields:
+    //   - uid: string (required)
+    //   - email: string (required)
+    //   - displayName: string (optional)
+    //   - photoURL: string (optional)
+    //   - role: string (required, ['admin', 'user'])
+    //
+    // Collection: members
+    // Document ID: auto-generated
+    // Fields:
+    //   - memberType: string (required, ['Life', 'General', 'Associate'])
+    //   - name: string (required, 1-100 chars)
+    //   - fathersName: string (optional)
+    //   - mothersName: string (optional)
+    //   - mobileNo: string (required, 10-13 chars)
+    //   - emailAddress: string (required, email format)
+    //   - bloodGroup: string (required)
+    //   - gender: string (required, ['Male', 'Female', 'Other'])
+    //   - designation: string (optional)
+    //   - occupation: string (required)
+    //   - installationDate: string (required, date format)
+    //   - isDeceased: bool (required)
+    //   - deceasedDate: string (optional)
+    //   - presentAddress: string (required, 1-250 chars)
+    //   - permanentAddress: string (required, 1-250 chars)
+    //   - businessAddress: string (required, 1-250 chars)
+    //   - photoUrl: string (optional)
+    //   - createdBy: string (required, UID)
+    //   - createdDate: timestamp (required)
+    //   - updatedBy: string (optional, UID)
+    //   - updatedDate: timestamp (optional)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "md.marufalrashid@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidUrl(url) {
+      return url is string && (url.matches("^https://.*") || url.matches("^http://.*"));
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return hasRequiredFields(['uid', 'email', 'role']) &&
+             data.uid == request.auth.uid &&
+             data.email == request.auth.token.email &&
+             data.role in ['admin', 'user'];
+    }
+
+    function isValidMember(data) {
+      return hasRequiredFields(['memberType', 'name', 'mobileNo', 'emailAddress', 'gender', 'occupation', 'installationDate', 'isDeceased', 'presentAddress', 'permanentAddress', 'businessAddress', 'createdBy', 'createdDate']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.mobileNo is string && data.mobileNo.size() >= 10 && data.mobileNo.size() <= 13 &&
+             isValidEmail(data.emailAddress) &&
+             data.memberType in ['Life', 'General', 'Associate'] &&
+             data.gender in ['Male', 'Female', 'Other'] &&
+             data.presentAddress.size() <= 250 &&
+             data.permanentAddress.size() <= 250 &&
+             data.businessAddress.size() <= 250;
+    }
+
+    function isValidActivity(data) {
+      return hasRequiredFields(['title', 'description', 'date', 'status']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.status in ['Planned', 'Completed'];
+    }
+
+    function isValidSubscription(data) {
+      return hasRequiredFields(['memberId', 'month', 'year', 'amount', 'status']) &&
+             data.month >= 1 && data.month <= 12 &&
+             data.year >= 2000 &&
+             data.amount >= 0 &&
+             data.status in ['Paid', 'Due'];
+    }
+
+    function isValidFinance(data) {
+      return hasRequiredFields(['type', 'category', 'amount', 'date', 'description']) &&
+             data.type in ['Income', 'Expense'] &&
+             data.amount >= 0;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == 'user' || isAdmin());
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == resource.data.role || isAdmin());
+    }
+
+    match /members/{memberId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidMember(request.resource.data) && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isAuthenticated() && isValidMember(request.resource.data) && (isAdmin() || resource.data.createdBy == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    match /activities/{actId} {
+      allow read: if true; // Publicly readable
+      allow write: if isAdmin();
+    }
+
+    match /subscriptions/{subId} {
+      allow read: if isAuthenticated(); // Members can see reports, or filter by their ID
+      allow write: if isAdmin();
+    }
+
+    match /finances/{finId} {
+      allow read: if isAuthenticated(); // Transparent report for members
+      allow write: if isAdmin();
+    }
+
+    match /settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+  }
+}

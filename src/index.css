@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-primary: #106c3e;
+  --color-background: #fdfcf7;
+  --color-sidebar: #0f4d2a;
+  --color-card-border: #e2e8f0;
+  --color-text-main: #2d2d2d;
+  --color-text-muted: #64748b;
+  --color-accent: #e63928;
+
+  --radius-lg: 8px;
+  --radius-md: 6px;
+  --radius-sm: 4px;
+}
+
+@layer base {
+  * {
+    @apply border-card-border outline-primary/50;
+  }
+  body {
+    @apply bg-background text-text-main font-sans antialiased;
+  }
+}
+
+/* Shadcn UI Variable Mapping */
+:root {
+  --background: 210 40% 98%;
+  --foreground: 222.2 47.4% 11.2%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 47.4% 11.2%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 47.4% 11.2%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+  --radius: 0.5rem;
+}
+
+.cn-toast {
+  @apply rounded-lg border-card-border bg-white text-text-main shadow-lg;
+}
+
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
